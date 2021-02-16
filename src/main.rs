@@ -1,3 +1,8 @@
+
+
+mod cpu;
+use cpu::State8080;
+
 fn main() {
-    println!("Hello, world!");
+    let cpu_state = State8080::new();  
 }
