@@ -8,9 +8,33 @@ pub union RegisterPair {
 }
 
 impl RegisterPair {
-   pub fn new() -> RegisterPair {
+    pub fn new() -> RegisterPair {
         RegisterPair { both: 0 } 
-   } 
+    } 
+
+    pub fn both(self) -> u16 {
+        unsafe  { self.both }
+    }
+
+    pub fn both_mut(&mut self) -> &mut u16 {
+        unsafe { &mut self.both }
+    }
+
+    pub fn lsb(self) -> u8 {
+        unsafe { self.one.0 } 
+    }
+
+    pub fn lsb_mut(&mut self) -> &mut u8 {
+        unsafe { &mut self.one.0 }
+    }
+
+    pub fn msb(self) -> u8 {
+        unsafe { self.one.1 }
+    }
+
+    pub fn msb_mut(&mut self) -> &mut u8 {
+        unsafe { &mut self.one.1 }
+    }
 }
 
 pub struct Flags {
@@ -57,12 +81,22 @@ impl State8080 {
         }
     }
 
+
+    fn bc_mut(&mut self) -> &mut 16 {
+            
+    }
+
     pub fn emulate(&mut self, ) {
         let opcode = self.memory[self.pc as usize];
 
         let size = match opcode {
             0x00 | 0x20 => 1,
+            0x01 => {
+                3
+            }
             _ => panic!("unimplemented instruction {}", opcode),
         };
+
+        self.pc += 1;
     }
 }
