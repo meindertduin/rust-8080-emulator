@@ -46,6 +46,14 @@ pub struct Flags {
 }
 
 impl Flags {
+    pub fn set_with_psw(&mut self, value: u8) {
+        self.sign = (value & 1 << 7) != 0;
+        self.zero = (value & 1 << 6) != 0;
+        self.aux_carry = (value & 1 << 4) != 0;
+        self.parity = (value & 1 << 2) != 0;
+        self.carry = (value & 1) != 0;
+    }
+
     fn set_sign(&mut self, value: u8) {
        self.sign = value & (1 << 7) != 0; 
     }
@@ -267,7 +275,14 @@ impl State8080 {
     }
     
     fn cmp(&mut self, operand: u8) {
-        self.flags.set_all((self.a as u16).wrapping_sub(operand as u16), (self.a & 0xf).wrapping_sub(operand & 0xf));
+        self.flags.set_all((self.a as u16)
+            .wrapping_sub(operand as u16), (self.a & 0xf)
+            .wrapping_sub(operand & 0xf));
+    }
+
+    fn push(&mut self, operand: u16) {
+        self.sp -= 2;
+        self.write_bytes(self.sp, operand);
     }
     
     pub fn emulate(&mut self, ) {
