@@ -82,8 +82,30 @@ impl State8080 {
     }
 
 
-    fn bc_mut(&mut self) -> &mut 16 {
-            
+    fn read_byte(&self, address: u16) -> u8 {
+        self.memory[address as usize]
+    }  
+
+    fn read_bytes(&self, address: u16) -> u16 {
+        ((self.read_byte(address + 1) as u16) << 8) | self.read_byte(address) as u16
+    }
+
+    fn read_next_instruction_byte(&self) -> u8 {
+        self.read_byte(self.pc + 1)
+    }
+
+    fn read_next_instruction_bytes(&self) -> u16 {
+        self.read_bytes(self.pc + 1)
+    }
+
+    fn write_byte(&mut self, address: u16, value: u8) {
+        let mut stored_value = self.memory[address as usize];
+        stored_value = value;
+    }
+
+    fn write_bytes(&mut self, address: u16, value: u16) {
+        self.write_byte(address, value as u8);
+        self.write_byte(address, (value >> 8) as u8);
     }
 
     pub fn emulate(&mut self, ) {
@@ -92,7 +114,19 @@ impl State8080 {
         let size = match opcode {
             0x00 | 0x20 => 1,
             0x01 => {
+                *self.bc.both_mut() = self.read_next_instruction_bytes();
                 3
+            },
+            0x02 => {
+                self.write_byte(self.bc.both(), self.a);
+                1
+            },
+            0x03 => {
+                *self.bc.both_mut() = self.bc.both().wrapping_add(1);
+                1 
+            },
+            0x04 => {
+                
             }
             _ => panic!("unimplemented instruction {}", opcode),
         };
