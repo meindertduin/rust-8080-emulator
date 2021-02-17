@@ -72,6 +72,13 @@ impl Flags {
         self.set_all_but_carry(value);
         self.set_pariry(value);
     }
+
+    pub fn set_all_but_aux_carry(&mut self, value: u16) {
+        self.set_zero(value as u8);
+        self.set_pariry(value as u8);
+        self.set_sign(value as u8);
+        self.set_carry(value);
+    }
 }
 
 const MEMORY_SIZE: usize = 0x4000;
@@ -137,16 +144,60 @@ impl State8080 {
         self.write_byte(address, (value >> 8) as u8);
     }
 
+    // single register instructions
+
     fn inr(&mut self, operand: u8) -> u8 {
         let result = operand.wrapping_add(1);
         self.flags.set_all_but_carry(result);
         result 
     }
 
+    fn dec(&mut self, operand: u8) -> u8 {
+        let result = operand.wrapping_sub(1);
+        self.flags.set_all_but_carry(result);
+        result
+    }
+
+    fn cma(&mut self) {
+        self.a = ! self.a;
+    }
+
+    fn daa(&mut self) {
+        let mut result = self.a as u16;
+
+        let lsb = result & 0xf;
+
+        if self.flags.aux_carry || lsb > 9 {
+            result += 6;
+
+            if result & 0xf < lsb {
+                self.flags.aux_carry = true;
+            }
+        }
+
+        let lsb = result & 0xf;
+        let mut msb = (result >> 4) & 0xf;
+
+        if self.flags.carry || msb > 9 {
+            msb += 6;
+        }
+
+        let result = (msb << 4) | lsb;
+        self.flags.set_all_but_aux_carry(result);
+
+        self.a = result as u8;
+    }
+
+    fn dad(&mut self, operand: u16) {
+        let result = (self.hl.both() as u32).wrapping_add(operand as u32);
+        self.flags.set_carry(result as u16);
+        *self.hl.both_mut() = result as u16;
+    }
+
     pub fn emulate(&mut self, ) {
         let opcode = self.memory[self.pc as usize];
 
-        let size = match opcode {
+        let op_size = match opcode {
             0x00 | 0x20 => 1,
             0x01 => {
                 *self.bc.both_mut() = self.read_next_instruction_bytes();
@@ -163,10 +214,24 @@ impl State8080 {
             0x04 => {
                 *self.bc.msb_mut() = self.inr(self.bc.msb());
                 1 
+            },
+            0x05 => {
+                *self.bc.msb_mut() = self.dec(self.bc.msb());
+                1
             }
+            0x06 => {
+                *self.bc.msb_mut() = self.read_next_instruction_byte();
+                2
+            },
+            0x07 => {
+                let prev_bit7: u8 = self.a & (1 << 7);
+                self.a <<= 1;
+                self.flags.carry = prev_bit7 != 0;
+                1
+            },
             _ => panic!("unimplemented instruction {}", opcode),
         };
 
-        self.pc += 1;
+        self.pc += op_size;
     }
 }
