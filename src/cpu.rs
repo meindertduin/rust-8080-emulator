@@ -79,6 +79,14 @@ impl Flags {
         self.set_sign(value as u8);
         self.set_carry(value);
     }
+
+    pub fn set_all(&mut self, value: u16, aux_value: u8) {
+        self.set_carry(value);
+        self.set_pariry(value as u8);
+        self.set_sign(value as u8);
+        self.set_carry(value);
+        self.set_aux_carry(aux_value);
+    }
 }
 
 const MEMORY_SIZE: usize = 0x4000;
@@ -189,11 +197,79 @@ impl State8080 {
     }
 
     fn dad(&mut self, operand: u16) {
-        let result = (self.hl.both() as u32).wrapping_add(operand as u32);
+        let result = (self.hl.both() as u32)
+            .wrapping_add(operand as u32);
+
         self.flags.set_carry(result as u16);
         *self.hl.both_mut() = result as u16;
     }
 
+    // register or memory to accumulator instructions
+    
+    fn add(&mut self, operand: u8) {
+        let result = (self.a as u16)
+            .wrapping_add(operand as u16);
+
+        self.flags
+            .set_all(result, (self.a & 0xf)
+            .wrapping_add(operand & 0xf));
+        self.a = result as u8;
+    }
+
+    fn adc(&mut self, operand: u8) {
+        let result = (self.a as u16)
+            .wrapping_add(operand as u16)
+            .wrapping_add(self.flags.carry as u16);
+
+        self.flags
+            .set_all(result, (self.a & 0xf)
+            .wrapping_add(operand & 0xf)
+            .wrapping_add((self.flags.carry as u8) & 0xf));
+        self.a = result as u8;
+    }
+
+    fn sub(&mut self, operand: u8) {
+        let result = (self.a as u16)
+            .wrapping_sub(operand as u16);
+
+        self.flags.set_all(result, (self.a & 0xf)
+            .wrapping_sub(operand & 0xf));
+        self.a = result as u8;
+    }
+
+    fn sbb(&mut self, operand: u8) {
+        let result = (self.a as u16)
+            .wrapping_sub(operand as u16)
+            .wrapping_sub(self.flags.carry as u16);
+
+        self.flags.set_all(result, (self.a & 0xf)
+                .wrapping_sub(operand & 0xf)
+                .wrapping_sub((self.flags.carry as u8) & 0xf));
+        self.a = result as u8;
+    }
+    
+    fn ana(&mut self, operand: u8) {
+        self.a &= operand;
+        self.flags.set_all_but_aux_carry(self.a as u16);
+        self.flags.carry = false;
+    }
+
+    fn xra(&mut self, operand: u8) {
+        self.a ^= operand;
+        self.flags.set_all(self.a as u16, self.a);
+        self.flags.carry = false;
+    }
+
+    fn ora(&mut self, operand: u8) {
+        self.a |= operand;
+        self.flags.set_all_but_aux_carry(self.a as u16);
+        self.flags.carry = false;
+    }
+    
+    fn cmp(&mut self, operand: u8) {
+        self.flags.set_all((self.a as u16).wrapping_sub(operand as u16), (self.a & 0xf).wrapping_sub(operand & 0xf));
+    }
+    
     pub fn emulate(&mut self, ) {
         let opcode = self.memory[self.pc as usize];
 
