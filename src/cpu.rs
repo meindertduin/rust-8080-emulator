@@ -45,6 +45,35 @@ pub struct Flags {
     aux_carry: bool,
 }
 
+impl Flags {
+    fn set_sign(&mut self, value: u8) {
+       self.sign = value & (1 << 7) != 0; 
+    }
+
+    fn set_zero(&mut self, value: u8) {
+        self.zero = value == 0;
+    }
+
+    fn set_aux_carry(&mut self, value: u8) {
+        self.aux_carry = value > 0xf;
+    }
+
+    fn set_pariry(&mut self, value: u8) {
+        self.parity = value.count_ones() % 2 == 0;
+    }
+
+    pub fn set_carry(&mut self, value: u16) {
+        self.carry = value > 0xff;
+    }
+
+    pub fn set_all_but_carry(&mut self, value: u8) {
+        self.set_zero(value);
+        self.set_sign(value);
+        self.set_all_but_carry(value);
+        self.set_pariry(value);
+    }
+}
+
 const MEMORY_SIZE: usize = 0x4000;
 
 pub struct State8080 {
@@ -108,6 +137,12 @@ impl State8080 {
         self.write_byte(address, (value >> 8) as u8);
     }
 
+    fn inr(&mut self, operand: u8) -> u8 {
+        let result = operand.wrapping_add(1);
+        self.flags.set_all_but_carry(result);
+        result 
+    }
+
     pub fn emulate(&mut self, ) {
         let opcode = self.memory[self.pc as usize];
 
@@ -126,7 +161,8 @@ impl State8080 {
                 1 
             },
             0x04 => {
-                
+                *self.bc.msb_mut() = self.inr(self.bc.msb());
+                1 
             }
             _ => panic!("unimplemented instruction {}", opcode),
         };
