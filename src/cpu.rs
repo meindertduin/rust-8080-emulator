@@ -204,13 +204,6 @@ impl State8080 {
         self.a = result as u8;
     }
 
-    fn dad(&mut self, operand: u16) {
-        let result = (self.hl.both() as u32)
-            .wrapping_add(operand as u32);
-
-        self.flags.set_carry(result as u16);
-        *self.hl.both_mut() = result as u16;
-    }
 
     // register or memory to accumulator instructions
     
@@ -256,35 +249,76 @@ impl State8080 {
         self.a = result as u8;
     }
     
-    fn ana(&mut self, operand: u8) {
-        self.a &= operand;
-        self.flags.set_all_but_aux_carry(self.a as u16);
-        self.flags.carry = false;
-    }
 
-    fn xra(&mut self, operand: u8) {
-        self.a ^= operand;
-        self.flags.set_all(self.a as u16, self.a);
-        self.flags.carry = false;
-    }
-
-    fn ora(&mut self, operand: u8) {
-        self.a |= operand;
-        self.flags.set_all_but_aux_carry(self.a as u16);
-        self.flags.carry = false;
-    }
-    
-    fn cmp(&mut self, operand: u8) {
+    fn cmpa(&mut self, operand: u8) {
         self.flags.set_all((self.a as u16)
             .wrapping_sub(operand as u16), (self.a & 0xf)
             .wrapping_sub(operand & 0xf));
     }
 
+    // register pair instructions
+
     fn push(&mut self, operand: u16) {
         self.sp -= 2;
         self.write_bytes(self.sp, operand);
     }
+
+    fn pop(&mut self) -> u16 {
+        self.sp += 2;
+        self.read_bytes(self.sp - 2)
+    }
+
+    fn dad(&mut self, operand: u16) {
+        let result = (self.hl.both() as u32)
+            .wrapping_add(operand as u32);
+
+        self.flags.set_carry(result as u16);
+        *self.hl.both_mut() = result as u16;
+    }
+
+    fn xthl(&mut self) {
+        let tmp = self.hl.both();
+
+        *self.hl.both_mut() = self.pop();
+        self.push(tmp);
+    }
+
+    // immediate iinstructions
+       
+    fn and(&mut self, operand: u8) {
+        self.a &= operand;
+        self.flags.set_all_but_aux_carry(self.a as u16);
+        self.flags.carry = false;
+    }
+
+    fn xor(&mut self, operand: u8) {
+        self.a ^= operand;
+        self.flags.set_all(self.a as u16, self.a);
+        self.flags.carry = false;
+    }
+
+    fn or(&mut self, operand: u8) {
+        self.a |= operand;
+        self.flags.set_all_but_aux_carry(self.a as u16);
+        self.flags.carry = false;
+    }
+
+    // jump instructions
+   
+    fn jmp(&mut self, adr: u16) {
+        self.pc = adr;
+    }
+
+    fn call(&mut self, adr: u16) {
+        self.push(self.pc + 3);
+        self.pc = adr;
+    }
+
+    fn ret(&mut self) {
+        self.pc = self.pop();
+    }
     
+
     pub fn emulate(&mut self, ) {
         let opcode = self.memory[self.pc as usize];
 
