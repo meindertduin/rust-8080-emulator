@@ -1,4 +1,4 @@
-
+use std::fmt;
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -43,6 +43,49 @@ pub struct Flags {
     parity: bool,
     carry: bool,
     aux_carry: bool,
+}
+
+impl fmt::Display for Flags {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        let mut zero: char;
+        let mut sign: char;
+        let mut parity: char;
+        let mut carry: char;
+        let mut aux: char;
+
+        if self.zero {
+            zero = 'z'
+        } else {
+            zero = '.'
+        }
+
+        if self.sign {
+            sign = 's'
+        } else {
+            sign = '.'
+        }
+
+        if self.parity {
+            parity = 'p'
+        } else {
+            parity = '.'
+        }
+
+
+        if self.carry {
+            carry = 'c'
+        } else {
+            carry = '.'
+        }
+
+        if self.aux_carry {
+            'a'
+        } else {
+            '.'
+        };
+
+        write!(f, "{}{}{}{}{}",zero, sign, parity, carry, aux)
+    }
 }
 
 impl Flags {
@@ -133,6 +176,26 @@ pub struct State8080 {
     interupts_enabled: bool,
 }
 
+impl fmt::Display for State8080 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+       write!(
+       f, 
+       "a={:04x} b={:02x} c={:02x} d={:02x} e={:02x} h={:02x} l={:02x}\n
+       sp={:04x} flags ={}\n
+       pc={:04x} m={:02x}",
+       self.a,
+       self.bc.msb(),
+       self.bc.lsb(),
+       self.de.msb(),
+       self.de.lsb(),
+       self.hl.msb(),
+       self.hl.lsb(),
+       self.sp,
+       self.flags,
+       self.pc,
+       self.read_next_instruction_byte()) 
+    }
+}
 
 impl State8080 {
     pub fn new() -> State8080 {
