@@ -47,11 +47,11 @@ pub struct Flags {
 
 impl fmt::Display for Flags {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        let mut zero: char;
-        let mut sign: char;
-        let mut parity: char;
-        let mut carry: char;
-        let mut aux: char;
+        let zero: char;
+        let sign: char;
+        let parity: char;
+        let carry: char;
+        let aux: char;
 
         if self.zero {
             zero = 'z'
@@ -79,10 +79,10 @@ impl fmt::Display for Flags {
         }
 
         if self.aux_carry {
-            'a'
+            aux = 'a'
         } else {
-            '.'
-        };
+            aux = '.'
+        }
 
         write!(f, "{}{}{}{}{}",zero, sign, parity, carry, aux)
     }
@@ -216,6 +216,17 @@ impl State8080 {
             },
             interupts_enabled: false,
         }
+    }
+
+    pub fn load_from_rom(rom: &[u8], rom_start: usize, pc_start: u16) -> Self {
+        let mut cpu = Self::new();
+        cpu.load_rom(rom, rom_start);
+        cpu.pc = pc_start;
+        cpu
+    }
+
+    fn load_rom(&mut self, rom: &[u8], rom_start: usize) {
+        self.memory[rom_start..rom_start + rom.len()].clone_from_slice(rom);
     }
 
     fn m(&self) -> u8 {
@@ -417,7 +428,7 @@ impl State8080 {
     
 
     pub fn emulate(&mut self) {
-        let opcode = self.memory[self.pc as usize];
+        let opcode = self.read_byte(self.pc);
 
         let (op_size, cycles) = match opcode {
             // NOP
