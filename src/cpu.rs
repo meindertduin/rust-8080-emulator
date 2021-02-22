@@ -595,7 +595,356 @@ impl State8080 {
                 self.dad(self.sp);
                 (3, 10)
 
+            },
+            // LDA adr
+            0x3a => {
+                self.a = self.read_byte(self.read_next_instruction_bytes());
+                (3, 13)
+            },
+            0x3b => {
+                self.sp = self.sp.wrapping_sub(1);
+                (1, 5)
+            },
+            // INR A
+            0x3c => {
+                self.a = self.inr(self.a);
+                (1, 5)
+            },
+            // DCR A
+            0x3d => {
+                self.a = self.dec(self.a);
+                (1, 5)
+            },
+            // MVI A, D8
+            0x3e => {
+                self.a = self.read_next_instruction_byte();
+                (2, 7)
+            },
+            // CMC
+            0x3f => {
+                self.flags.carry = !sel.flags.carry;
+                (1, 4)
+            },
+            // MOV B, B
+            0x40 => {
+                *self.bc.msb_mut() = self.bc.msb();
+                (1, 5)
             }
+            // MOV B, C
+            0x41 => {
+                *self.bc.msb_mut() = self.bc.lsb();
+                (1, 5)
+            },
+            // MOV B, D
+            0x42 => {
+                *self.bc.msb_mut() = self.de.msb();
+                (1, 5)
+            },
+            // MOV B, E
+            0x43 => {
+                *self.bc.msb_mut() = self.de.lsb();
+                (1, 5)
+            },
+            // MOV B, H
+            0x44 => {
+                *self.bc.msb_mut() = self.hl.msb();
+                (1, 5)
+            },
+            // MOV B, L
+            0x45 => {
+                *self.bc.msb_mut() = self.hl.lsb();
+                (1, 5)
+            },
+            // MOV B, M
+            0x46 => {
+                *self.bc.msb_mut() = self.m();
+                (1, 5)
+            },
+            // MOV B, A
+            0x47 => {
+                *self.bc.msb_mut() = self.a;
+                (1, 5)
+            },
+            // MOV C, B
+            0x48 => {
+                *self.bc.lsb_mut() = self.bc.msb();
+                (1, 5)
+            },
+            // MOV C, C
+            0x49 => {
+                *self.bc.lsb_mut() = self.bc.lsb();
+                (1, 5)
+            },
+            // MOV C, D
+            0x4a => {
+                *self.bc.lsb_mut() = self.de.msb();
+                (1, 5)
+            },
+            // MOV C, E
+            0x4b => {
+                *self.bc.lsb_mut() = self.de.lsb();
+                (1, 5)
+            },
+            // MOV C, H
+            0x4c => {
+                *self.bc.lsb_mut() = self.hl.msb();
+                (1, 5)
+            },
+            // MOV C, L
+            0x4d => {
+                *self.bc.lsb_mut() = self.hl.lsb();
+                (1, 5)
+            },
+            // MOV C, M
+            0x4e => {
+                *self.bc.lsb_mut() = self.m();
+                (1, 5)
+            },
+            // MOV C, A
+            0x4f => {
+                *self.bc.lsb_mut() = self.a;
+                (1, 5)
+            },
+            // MOV D, B
+            0x50 => {
+                *self.de.msb_mut() = self.bc.msb();
+                (1, 5)
+            },
+            // MOV D, C
+            0x51 => {
+                *self.de.msb_mut() = self.bc.lsb();
+                (1, 5)
+            },
+            // MOV D, D
+            0x52 => {
+                *self.de.msb_mut() = self.de.msb();
+                (1, 5)
+            },
+            // MOV D, E
+            0x53 => {
+                *self.de.msb_mut() = self.de.lsb();
+                (1, 5)
+            },
+            // MOV D, H
+            0x54 => {
+                *self.de.msb_mut() = self.hl.msb();
+                (1, 5)
+            },
+            // MOV D, L
+            0x55 => {
+                *self.de.msb_mut() = self.hl.lsb();
+                (1, 5)
+            },
+            // MOV D, M
+            0x56 => {
+                *self.de.msb_mut() = self.m();
+                (1, 5)
+            },
+            // MOV D, A
+            0x57 => {
+                *self.de.msb_mut() = self.a;
+                (1, 5)
+            },
+            // MOV E, B
+            0x58 => {
+                *self.de.lsb_mut() = self.bc.msb();
+                (1, 5)
+            },
+            // MOV E, C
+            0x59 => {
+                *self.de.lsb_mut() = self.bc.lsb();
+                (1, 5)
+            },
+            // MOV E, D
+            0x5a => {
+                *self.de.lsb_mut() = self.de.msb();
+                (1, 5)
+            },
+            // MOV E, E
+            0x5b => {
+                *self.de.lsb_mut() = self.de.lsb();
+                (1, 5)
+            },
+            // MOV E, H
+            0x5c => {
+                *self.de.lsb_mut() = self.hl.msb();
+                (1, 5)
+            },
+            // MOV E, L
+            0x5d => {
+                *self.de.lsb_mut() = self.hl.lsb();
+                (1, 5)
+            },
+            // MOV E, M
+            0x5e => {
+                *self.de.lsb_mut() = self.m();
+                (1, 5)
+            },
+            // MOV E, A
+            0x5f => {
+                *self.de.lsb_mut() = self.a;
+                (1, 5)
+            },
+            // MOV H. B
+            0x60 => {
+                *self.hl.msb_mut() = self.bc.msb();
+                (1, 5)
+            },
+            // MOV H. C
+            0x61 => {
+                *self.hl.msb_mut() = self.bc.lsb();
+                (1, 5)
+            },
+            // MOV H. D
+            0x62 => {
+                *self.hl.msb_mut() = self.de.msb();
+                (1, 5)
+            },
+            // MOV H. E
+            0x63 => {
+                *self.hl.msb_mut() = self.de.lsb();
+                (1, 5)
+            },
+            // MOV H. H
+            0x64 => {
+                *self.hl.msb_mut() = self.hl.msb();
+                (1, 5)
+            },
+            // MOV H. L
+            0x65 => {
+                *self.hl.msb_mut() = self.hl.lsb();
+                (1, 5)
+            },
+            // MOV H. M
+            0x66 => {
+                *self.hl.msb_mut() = self.m();
+                (1, 5)
+            },
+            // MOV H. A
+            0x67 => {
+                *self.hl.msb_mut() = self.a;
+                (1, 5)
+            },
+            // MOV L. B
+            0x68 => {
+                *self.hl.lsb_mut() = self.bc.msb();
+                (1, 5)
+            },
+            // MOV L. C
+            0x69 => {
+                *self.hl.lsb_mut() = self.bc.lsb();
+                (1, 5)
+            },
+            // MOV L. D
+            0x6a => {
+                *self.hl.lsb_mut() = self.de.msb();
+                (1, 5)
+            },
+            // MOV L. E
+            0x6b => {
+                *self.hl.lsb_mut() = self.de.lsb();
+                (1, 5)
+            },
+            // MOV L. H
+            0x6c => {
+                *self.hl.lsb_mut() = self.hl.msb();
+                (1, 5)
+            },
+            // MOV L. L
+            0x6d => {
+                *self.hl.lsb_mut() = self.hl.lsb();
+                (1, 5)
+            },
+            // MOV L. M
+            0x6e => {
+                *self.hl.lsb_mut() = self.m();
+                (1, 5)
+            },
+            // MOV L. A
+            0x6f => {
+                *self.hl.lsb_mut() = self.a;
+                (1, 5)
+            },
+            // MOV M. B
+            0x70 => {
+                *self.m_mut() = self.bc.msb();
+                (1, 5)
+            },
+            // MOV M. C
+            0x71 => {
+                *self.m_mut() = self.bc.lsb();
+                (1, 5)
+            },
+            // MOV M. D
+            0x72 => {
+                *self.m_mut() = self.de.msb();
+                (1, 5)
+            },
+            // MOV M. E
+            0x73 => {
+                *self.m_mut() = self.de.lsb();
+                (1, 5)
+            },
+            // MOV M. H
+            0x74 => {
+                *self.m_mut() = self.hl.msb();
+                (1, 5)
+            },
+            // MOV M. L
+            0x75 => {
+                *self.m_mut() = self.hl.lsb();
+                (1, 5)
+            },
+            // HLT
+            0x76 => {
+                println!("going into hlt");
+                std::process::exit(0);
+            },
+            // MOV M. A
+            0x77 => {
+                *self.m_mut() = self.a;
+                (1, 5)
+            },
+            // MOV A. B
+            0x78 => {
+                self.a = self.bc.msb();
+                (1, 5)
+            },
+            // MOV A. C
+            0x79 => {
+                self.a = self.bc.lsb();
+                (1, 5)
+            },
+            // MOV A. D
+            0x7a => {
+                self.a = self.de.msb();
+                (1, 5)
+            },
+            // MOV A. E
+            0x7b => {
+                self.a = self.de.lsb();
+                (1, 5)
+            },
+            // MOV A. H
+            0x7c => {
+                self.a = self.hl.msb();
+                (1, 5)
+            },
+            // MOV A. L
+            0x7d => {
+                self.a = self.hl.lsb();
+                (1, 5)
+            },
+            // MOV A. M
+            0x7e => {
+                self.a = self.m();
+                (1, 5)
+            },
+            // MOV A. A
+            0x7f => {
+                self.a = self.a;
+                (1, 5)
+            },
             _ => panic!("unimplemented instruction {}", opcode),
         };
 
