@@ -1,21 +1,20 @@
-
+use minifb::{Key, Window, WindowOptions};
 
 mod cpu;
 mod space_invader;
 
-use cpu::State8080;
 
 fn main() {
-    let rom = include_bytes!("invaders.rom");
-    
-    let mut cpu = State8080::load_from_rom(rom, 0, 0);
-    let mut count: i32 = 0;
-    loop {
-        count += 1;
-        let mut line = String::new();
-        std::io::stdin().read_line(&mut line).unwrap();
-        cpu.emulate();
-        println!("{}", cpu);
-        println!("count={}", count);
+    let mut invaders_game_state = space_invader::GameState::new_game();
+    let mut window = Window::new(
+        "invaders test",
+        224,
+        256,
+        WindowOptions::default(),
+    ).unwrap();
+
+    while window.is_open() && !window.is_key_down(Key::Escape) {
+        invaders_game_state.next_frame(&mut window);
     }
+
 }

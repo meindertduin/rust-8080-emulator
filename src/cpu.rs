@@ -1,5 +1,7 @@
 use std::fmt;
 
+use crate::space_invader::IOState;
+
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub union RegisterPair {
@@ -233,6 +235,10 @@ impl State8080 {
         }
     }
 
+    pub fn memory(&self) -> &[u8] {
+        &self.memory
+    }
+
     fn load_rom(&mut self, rom: &[u8], rom_start: usize) {
         self.memory[rom_start..rom_start + rom.len()].clone_from_slice(rom);
     }
@@ -435,10 +441,8 @@ impl State8080 {
     }
     
 
-    pub fn emulate(&mut self) {
+    pub fn emulate(&mut self, state: &mut dyn IOState) -> u64 {
         let opcode = self.read_byte(self.pc);
-
-        println!("code = {:04x}", opcode);
 
         let (op_size, cycles) = match opcode {
             // NOP
@@ -1531,7 +1535,6 @@ impl State8080 {
             },
             // IN D8
             0xdb => {
-                let port = opcode[1];
                 unimplemented!("0xdb; IN D8 not set");
             },
             // CC adr
@@ -1656,5 +1659,7 @@ impl State8080 {
         };
 
         self.pc += op_size;
+
+        cycles
     }
 }
