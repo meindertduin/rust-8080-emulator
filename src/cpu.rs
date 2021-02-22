@@ -142,7 +142,7 @@ impl Flags {
     pub fn set_all_but_carry(&mut self, value: u8) {
         self.set_zero(value);
         self.set_sign(value);
-        self.set_all_but_carry(value);
+        self.set_aux_carry(value);
         self.set_pariry(value);
     }
 
@@ -223,6 +223,14 @@ impl State8080 {
         cpu.load_rom(rom, rom_start);
         cpu.pc = pc_start;
         cpu
+    }
+
+    pub fn interrupt(&mut self, idn: u16) {
+        if self.interupts_enabled {
+            self.push(self.pc);
+            self.pc = 8 * idn;
+            self.interupts_enabled = false;
+        }
     }
 
     fn load_rom(&mut self, rom: &[u8], rom_start: usize) {
@@ -429,6 +437,8 @@ impl State8080 {
 
     pub fn emulate(&mut self) {
         let opcode = self.read_byte(self.pc);
+
+        println!("code = {:04x}", opcode);
 
         let (op_size, cycles) = match opcode {
             // NOP
@@ -1521,6 +1531,7 @@ impl State8080 {
             },
             // IN D8
             0xdb => {
+                let port = opcode[1];
                 unimplemented!("0xdb; IN D8 not set");
             },
             // CC adr
